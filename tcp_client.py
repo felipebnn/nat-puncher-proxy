@@ -18,7 +18,6 @@ def accept(port):
     logger.info("accept %s", port)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     s.bind(('', port))
     s.listen(1)
     s.settimeout(5)
@@ -37,7 +36,6 @@ def connect(local_addr, addr):
     logger.info("connect from %s to %s", local_addr, addr)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     s.bind(local_addr)
 
     while not STOP.is_set():
@@ -54,11 +52,10 @@ def connect(local_addr, addr):
 def sending_worker(a, b):
     while True:
         try:
-            data = a.recv(1024)
+            data = a.recv(65536)
             if not data:
                 break
 
-            print(data)
             b.sendall(data)
         except Exception as e:
             print('Exception', e)
@@ -78,9 +75,9 @@ def proxy(s1, s2):
         t2.join()
 
 
-def client_proxy(s):
+def client_proxy(s, port):
     s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s2.bind(('127.0.0.1', 1244))
+    s2.bind(('127.0.0.1', port))
     s2.listen()
 
     conn, addr = s2.accept()
@@ -127,8 +124,8 @@ def main(host, port):
         accept_thread.start()
 
         s = connect(priv_addr, client_pub_addr)
-        client_proxy(s)
-        #server_proxy(s)
+        client_proxy(s, 12345)
+        # server_proxy(s, 12345)
     finally:
         accept_thread.join()
 
