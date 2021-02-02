@@ -149,7 +149,7 @@ class TcpClient:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, message='%(asctime)s %(message)s')
     c = TcpClient(*addr_from_args(sys.argv[1:]))
-    if sys.argv[0] == 'client':
+    if sys.argv[1] == 'client':
         c.start_client('localhost', 12345)
-    else:
-        c.start_server('localhost', 12345)
+    elif sys.argv[1] == 'server':
+        c.start_server('192.168.1.8', 25565)
