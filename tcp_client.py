@@ -87,7 +87,7 @@ class TcpClient:
         try:
             while True:
                 try:
-                    data = a.recv(65536)
+                    data = a.recv(4096)
                 except socket.timeout:
                     if self.stop.is_set():
                         return
@@ -95,7 +95,6 @@ class TcpClient:
 
                 if not data:
                     break
-                print('data:', data)
 
                 b.sendall(data)
         except Exception as e:
@@ -131,6 +130,9 @@ class TcpClient:
                 print('>>>>> received local connection', addr)
                 
                 server_sock = self.tcp_punch()
+                server_sock.send(b'\0')
+                print(server_sock.recv(1))
+
                 self.proxy(client_conn, server_sock)
         finally:
             client_sock.close()
@@ -138,6 +140,8 @@ class TcpClient:
     def start_server(self, ip, port):
         while True:
             client_sock = self.tcp_punch()
+            client_sock.send(b'\0')
+            print(client_sock.recv(1))
 
             server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_sock.settimeout(2)
@@ -152,4 +156,4 @@ if __name__ == '__main__':
     if sys.argv[1] == 'client':
         c.start_client('localhost', 12345)
     elif sys.argv[1] == 'server':
-        c.start_server('192.168.1.8', 25565)
+        c.start_server('localhost', 12345)
